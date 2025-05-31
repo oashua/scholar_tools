@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bib文献管理助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #2d3e50;
+            color: #fff;
+            padding: 1em;
+        }
+
+        nav {
+            background: #f5f5f5;
+            padding: 0.5em;
+        }
+
+        nav button {
+            margin-right: 1em;
+        }
+
+        .container {
+            display: flex;
+            padding: 1em;
+        }
+
+        .editor,
+        .viewer {
+            flex: 1;
+            margin: 0 1em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 0.5em;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .actions button {
+            margin-right: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Bib文献管理助手</h1>
+    </header>
+    <nav>
+        <button id="editViewBtn">编辑视图</button>
+        <button id="useViewBtn">使用视图</button>
+    </nav>
+    <div class="container">
+        <!-- 编辑视图 -->
+        <div class="editor" id="editorView">
+            <h2>编辑视图</h2>
+            <div>
+                <label>导入jsonl文件: <input type="file" id="importJsonl"></label>
+                <button id="exportJsonl">导出jsonl</button>
+            </div>
+            <form id="bibForm" style="margin-top: 1em;">
+                <div style="margin-bottom: 1em;">
+                    <label style="display:inline-block;width:80px;">文章标题:</label>
+                    <input type="text" id="title" readonly style="width: 350px; background: #f5f5f5;">
+                </div>
+                <div style="margin-bottom: 1em; display: flex; align-items: flex-start;">
+                    <label style="width:80px; flex-shrink:0; margin-right:0;">Bib内容:</label>
+                    <textarea id="bibContent" rows="4"
+                        style="width: 350px; height: 90px; box-sizing: border-box;"></textarea>
+                </div>
+                <div style="margin-bottom: 1em;">
+                    <label style="display:inline-block;width:80px;">缩写:</label>
+                    <input type="text" id="bibKey" readonly style="width: 350px; background: #f5f5f5;">
+                </div>
+                <div style="margin-bottom: 1em;">
+                    <label style="display:inline-block;width:80px;">类别标签:</label>
+                    <input type="text" id="tags" style="width: 350px;">
+                </div>
+                <div style="margin-bottom: 1em;">
+                    <label style="display:inline-block;width:80px;">备注:</label>
+                    <input type="text" id="note" style="width: 350px;">
+                </div>
+                <button type="submit">添加/更新</button>
+            </form>
+            <div>
+                <h3>已添加文献</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>缩写</th>
+                            <th>标题</th>
+                            <th>类别标签</th>
+                            <th>备注</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bibList">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 使用视图 -->
+        <div class="viewer hidden" id="useView">
+            <h2>使用视图</h2>
+            <div>
+                <button id="copySelectedBib">复制所选Bib</button>
+                <button id="copySelectedKeys">复制所选缩写</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>缩写</th>
+                        <th>标题</th>
+                        <th>类别标签</th>
+                        <th>备注</th>
+                        <th>Bib内容</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="useBibList">
+                    <!-- 动态生成 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let bibData = [];
+
+        // 自动提取缩写和标题
+        document.getElementById('bibContent').addEventListener('input', function () {
+            const bib = this.value;
+            // 提取缩写
+            const keyMatch = bib.match(/@\w+\{([^,]+),/);
+            if (keyMatch) {
+                document.getElementById('bibKey').value = keyMatch[1];
+            }
+            // 提取标题
+            const titleMatch = bib.match(/title\s*=\s*[{"]([^"}]+)[}"]/i);
+            if (titleMatch) {
+                document.getElementById('title').value = titleMatch[1];
+            }
+        });
+
+        // 添加/更新文献
+        document.getElementById('bibForm').onsubmit = function (e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const bibContent = document.getElementById('bibContent').value.trim();
+            const bibKey = document.getElementById('bibKey').value.trim();
+            const tags = document.getElementById('tags').value.trim();
+            const note = document.getElementById('note').value.trim();
+
+            if (!bibKey || !bibContent) {
+                alert('请填写Bib内容和缩写');
+                return;
+            }
+
+            // 检查是否已存在，存在则更新
+            const idx = bibData.findIndex(item => item.bibKey === bibKey);
+            const entry = { title, bibContent, bibKey, tags, note };
+            if (idx >= 0) {
+                bibData[idx] = entry;
+            } else {
+                bibData.push(entry);
+            }
+            renderBibList();
+            this.reset();
+        };
+
+        // 渲染编辑视图列表
+        function renderBibList() {
+            const tbody = document.getElementById('bibList');
+            tbody.innerHTML = '';
+            bibData.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${item.bibKey}</td>
+            <td>${item.title}</td>
+            <td>${item.tags}</td>
+            <td>${item.note}</td>
+            <td class="actions">
+                <button onclick="editBib(${i})">编辑</button>
+                <button onclick="deleteBib(${i})">删除</button>
+            </td>
+        `;
+                tbody.appendChild(tr);
+            });
+            renderUseList();
+        }
+
+        // 编辑
+        window.editBib = function (i) {
+            const item = bibData[i];
+            document.getElementById('title').value = item.title;
+            document.getElementById('bibContent').value = item.bibContent;
+            document.getElementById('bibKey').value = item.bibKey;
+            document.getElementById('tags').value = item.tags;
+            document.getElementById('note').value = item.note;
+        };
+
+        // 删除
+        window.deleteBib = function (i) {
+            if (confirm('确定删除？')) {
+                bibData.splice(i, 1);
+                renderBibList();
+            }
+        };
+
+        // 导入jsonl
+        document.getElementById('importJsonl').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                const lines = reader.result.split('\n').filter(Boolean);
+                bibData = lines.map(line => {
+                    try { return JSON.parse(line); } catch { return null; }
+                }).filter(Boolean);
+                renderBibList();
+            };
+            reader.readAsText(file, 'utf-8');
+        });
+
+        // 导出jsonl
+        document.getElementById('exportJsonl').onclick = function () {
+            const content = bibData.map(item => JSON.stringify(item)).join('\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'bib_data.jsonl';
+            a.click();
+        };
+
+        // 渲染使用视图列表
+        function renderUseList() {
+            const tbody = document.getElementById('useBibList');
+            tbody.innerHTML = '';
+            bibData.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td><input type="checkbox" class="selectBib" data-idx="${i}"></td>
+            <td>
+                <button onclick="copyKey('${item.bibKey}')" title="复制缩写" style="margin-left:4px;">📋</button>
+                ${item.bibKey}
+            </td>
+            <td>${item.title}</td>
+            <td>${item.tags}</td>
+            <td>${item.note}</td>
+            <td><pre style="white-space:pre-wrap;">${item.bibContent}</pre></td>
+            <td></td>
+        `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 复制缩写
+        window.copyKey = function (key) {
+            navigator.clipboard.writeText(key);
+            alert('已复制缩写: ' + key);
+        };
+
+        // 复制所选Bib
+        document.getElementById('copySelectedBib').onclick = function () {
+            const checkboxes = document.querySelectorAll('.selectBib:checked');
+            const bibs = Array.from(checkboxes).map(cb => bibData[cb.dataset.idx].bibContent);
+            if (bibs.length) {
+                navigator.clipboard.writeText(bibs.join('\n\n'));
+                alert('已复制所选Bib');
+            }
+        };
+
+        // 复制所选缩写
+        document.getElementById('copySelectedKeys').onclick = function () {
+            const checkboxes = document.querySelectorAll('.selectBib:checked');
+            const keys = Array.from(checkboxes).map(cb => bibData[cb.dataset.idx].bibKey);
+            if (keys.length) {
+                navigator.clipboard.writeText(keys.join(', '));
+                alert('已复制所选缩写');
+            }
+        };
+
+        // 全选
+        document.getElementById('selectAll').onclick = function () {
+            const checked = this.checked;
+            document.querySelectorAll('.selectBib').forEach(cb => cb.checked = checked);
+        };
+
+        // 视图切换逻辑
+        document.getElementById('editViewBtn').onclick = function () {
+            document.getElementById('editorView').classList.remove('hidden');
+            document.getElementById('useView').classList.add('hidden');
+        };
+        document.getElementById('useViewBtn').onclick = function () {
+            document.getElementById('editorView').classList.add('hidden');
+            document.getElementById('useView').classList.remove('hidden');
+        };
+    </script>
+</body>
+
+</html>
