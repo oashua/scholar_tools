@@ -5,7 +5,12 @@
     <meta charset="UTF-8">
     <title>Bib文献管理助手</title>
     <style>
+        html {
+            height: 100%;
+        }
+
         body {
+            height: 100%;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -60,6 +65,10 @@
         .actions button {
             margin-right: 0.5em;
         }
+
+        .big-text {
+            font-size: 32px;
+        }
     </style>
 </head>
 
@@ -69,7 +78,7 @@
     </header>
     <nav>
         <button id="editViewBtn">编辑视图</button>
-        <button id="useViewBtn">使用视图</button>
+        <button id="useViewBtn">预览视图</button>
     </nav>
     <div class="container">
         <!-- 编辑视图 -->
@@ -105,45 +114,79 @@
             </form>
             <div>
                 <h3>已添加文献</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>缩写</th>
-                            <th>标题</th>
-                            <th>类别标签</th>
-                            <th>备注</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bibList">
-                        <!-- 动态生成 -->
-                    </tbody>
-                </table>
+                <div style="max-height:25%;overflow: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>缩写</th>
+                                <th>标题</th>
+                                <th>类别标签</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bibList">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <!-- 使用视图 -->
+        <!-- 预览视图 -->
         <div class="viewer hidden" id="useView">
-            <h2>使用视图</h2>
+            <h2>预览视图</h2>
             <div>
                 <button id="copySelectedBib">复制所选Bib</button>
                 <button id="copySelectedKeys">复制所选缩写</button>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
-                        <th>缩写</th>
-                        <th>标题</th>
-                        <th>类别标签</th>
-                        <th>备注</th>
-                        <th>Bib内容</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="useBibList">
-                    <!-- 动态生成 -->
-                </tbody>
-            </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;"><input
+                                    type="checkbox" id="selectAll"></th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">缩写</th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">标题</th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">类别标签</th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">备注</th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">Bib内容</th>
+                        </tr>
+                    </thead>
+                    <tbody id="useBibList">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+        </div>
+    </div>
+    <div style="padding: 2em;">
+        <h2>使用方法</h2>
+        <ol>
+            <li>在编辑视图中导入已有的文献表的jsonl文件(如有)。</li>
+            <li>在编辑视图中的Bib内容中填写文献的Bib内容。</li>
+            <li>为文献设置类别标签和备注，方便查找。</li>
+            <li>点击“添加/更新”按钮将文献添加到列表中。</li>
+            <li>在已添加文献的最右侧点击编辑，可以重新编辑此条文献的类别标签和备注，或重新导入相同缩写的文献Bib，覆盖已有数据。</li>
+            <li>在预览视图中，可以查看已添加的文献，并进行批量复制bib和缩写的操作，或在表格的缩写栏复制单条缩写。</li>
+            <li>可以复制所选Bib内容或缩写到剪贴板。</li>
+        </ol>
+        <h2>联系我</h2>
+        <div style="display: flex; gap: 20px; align-items: center;">
+
+            <div>
+                <a href="https://github.com/oashua/scholar_tools" target="_blank">
+                    <svg height="32" aria-hidden="true" viewBox="0 0 24 24" version="1.1" width="32"
+                        data-view-component="true" class="octicon octicon-mark-github v-align-middle">
+                        <path
+                            d="M12 1C5.9225 1 1 5.9225 1 12C1 16.8675 4.14875 20.9787 8.52125 22.4362C9.07125 22.5325 9.2775 22.2025 9.2775 21.9137C9.2775 21.6525 9.26375 20.7862 9.26375 19.865C6.5 20.3737 5.785 19.1912 5.565 18.5725C5.44125 18.2562 4.905 17.28 4.4375 17.0187C4.0525 16.8125 3.5025 16.3037 4.42375 16.29C5.29 16.2762 5.90875 17.0875 6.115 17.4175C7.105 19.0812 8.68625 18.6137 9.31875 18.325C9.415 17.61 9.70375 17.1287 10.02 16.8537C7.5725 16.5787 5.015 15.63 5.015 11.4225C5.015 10.2262 5.44125 9.23625 6.1425 8.46625C6.0325 8.19125 5.6475 7.06375 6.2525 5.55125C6.2525 5.55125 7.17375 5.2625 9.2775 6.67875C10.1575 6.43125 11.0925 6.3075 12.0275 6.3075C12.9625 6.3075 13.8975 6.43125 14.7775 6.67875C16.8813 5.24875 17.8025 5.55125 17.8025 5.55125C18.4075 7.06375 18.0225 8.19125 17.9125 8.46625C18.6138 9.23625 19.04 10.2125 19.04 11.4225C19.04 15.6437 16.4688 16.5787 14.0213 16.8537C14.42 17.1975 14.7638 17.8575 14.7638 18.8887C14.7638 20.36 14.75 21.5425 14.75 21.9137C14.75 22.2025 14.9563 22.5462 15.5063 22.4362C19.8513 20.9787 23 16.8537 23 12C23 5.9225 18.0775 1 12 1Z">
+                        </path>
+                    </svg>
+                </a>
+            </div>
+            <div>
+                <a href="mailto:hushaohua1999@gmail.com" target="_blank"
+                    style="margin-top: 0;vertical-align: top; margin-left:10px;text-decoration: none;">
+                    <p class="big-text" style="margin-top: 0;">📧</p>
+                </a>
+            </div>
         </div>
     </div>
     <script>
@@ -254,7 +297,7 @@
             a.click();
         };
 
-        // 渲染使用视图列表
+        // 渲染预览视图列表
         function renderUseList() {
             const tbody = document.getElementById('useBibList');
             tbody.innerHTML = '';
@@ -270,7 +313,6 @@
             <td>${item.tags}</td>
             <td>${item.note}</td>
             <td><pre style="white-space:pre-wrap;">${item.bibContent}</pre></td>
-            <td></td>
         `;
                 tbody.appendChild(tr);
             });
