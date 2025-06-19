@@ -135,20 +135,21 @@
         <!-- 预览视图 -->
         <div class="viewer hidden" id="useView">
             <h2>预览视图</h2>
-            <div>
+            <!-- <div>
                 <button id="copySelectedBib">复制所选Bib</button>
                 <button id="copySelectedKeys">复制所选缩写</button>
-            </div>
+            </div> -->
                 <table>
                     <thead>
                         <tr>
                             <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;"><input
-                                    type="checkbox" id="selectAll"></th>
-                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">缩写</th>
+                                    type="checkbox" id="selectAll">
+                </th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">缩写<button id="copySelectedKeys">复制所选缩写</button></th>
                             <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">标题</th>
                             <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">类别标签</th>
                             <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">备注</th>
-                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">Bib内容</th>
+                            <th style="position: sticky; top: 0; background: #a9a8a8; z-index: 2;">Bib内容<button id="copySelectedBib">复制所选Bib</button></th>
                         </tr>
                     </thead>
                     <tbody id="useBibList">
@@ -320,8 +321,23 @@
 
         // 复制缩写
         window.copyKey = function (key) {
-            navigator.clipboard.writeText(key);
-            alert('已复制缩写: ' + key);
+            navigator.clipboard.writeText(key).then(() => {
+                                        const notice = document.createElement('div');
+                                        notice.textContent = key+`已复制到剪切板！`;
+                                        notice.style.position = 'fixed';
+                                        notice.style.bottom = '30px';
+                                        notice.style.right = '30px';
+                                        notice.style.background = '#4CAF50';
+                                        notice.style.color = 'white';
+                                        notice.style.padding = '12px 24px';
+                                        notice.style.borderRadius = '6px';
+                                        notice.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                                        notice.style.zIndex = 9999;
+                                        document.body.appendChild(notice);
+                                        setTimeout(() => {
+                                            notice.remove();
+                                        }, 2000);
+                                    });
         };
 
         // 复制所选Bib
@@ -329,8 +345,23 @@
             const checkboxes = document.querySelectorAll('.selectBib:checked');
             const bibs = Array.from(checkboxes).map(cb => bibData[cb.dataset.idx].bibContent);
             if (bibs.length) {
-                navigator.clipboard.writeText(bibs.join('\n\n'));
-                alert('已复制所选Bib');
+                navigator.clipboard.writeText(bibs.join('\n\n')).then(() => {
+                                        const notice = document.createElement('div');
+                                        notice.textContent = '所选Bib已复制到剪切板！';
+                                        notice.style.position = 'fixed';
+                                        notice.style.bottom = '30px';
+                                        notice.style.right = '30px';
+                                        notice.style.background = '#4CAF50';
+                                        notice.style.color = 'white';
+                                        notice.style.padding = '12px 24px';
+                                        notice.style.borderRadius = '6px';
+                                        notice.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                                        notice.style.zIndex = 9999;
+                                        document.body.appendChild(notice);
+                                        setTimeout(() => {
+                                            notice.remove();
+                                        }, 2000);
+                                    });
             }
         };
 
@@ -339,8 +370,23 @@
             const checkboxes = document.querySelectorAll('.selectBib:checked');
             const keys = Array.from(checkboxes).map(cb => bibData[cb.dataset.idx].bibKey);
             if (keys.length) {
-                navigator.clipboard.writeText(keys.join(', '));
-                alert('已复制所选缩写');
+                navigator.clipboard.writeText(keys.join(', ')).then(() => {
+                                        const notice = document.createElement('div');
+                                        notice.textContent = '所选缩写已复制到剪切板！';
+                                        notice.style.position = 'fixed';
+                                        notice.style.bottom = '30px';
+                                        notice.style.right = '30px';
+                                        notice.style.background = '#4CAF50';
+                                        notice.style.color = 'white';
+                                        notice.style.padding = '12px 24px';
+                                        notice.style.borderRadius = '6px';
+                                        notice.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                                        notice.style.zIndex = 9999;
+                                        document.body.appendChild(notice);
+                                        setTimeout(() => {
+                                            notice.remove();
+                                        }, 2000);
+                                    });
             }
         };
 
